@@ -1,13 +1,48 @@
 import socket
+import xml.etree.ElementTree as ET
 
+def read_sensor_outputs(xml_file):
+    sensor_outputs = {}
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    for sensor in root.findall('sensor'):
+        name = sensor.find('name').text
+        outputs = [trigger.text for trigger in sensor.find('triggers')]
+        sensor_outputs[name] = outputs
+    return sensor_outputs
 
+def send_outputs(outputs):
+    # Create a client socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def handle_sensor_data(sensor_data):
+    # Define the server address (192.168.1.9) and port
+    server_address = ('127.0.0.1', 12346)
+
+    try:
+        # Connect to the server
+        client_socket.connect(server_address)
+
+        # Send the outputs to the server
+        client_socket.sendall(','.join(outputs).encode())
+
+        print("Outputs sent successfully:", outputs)
+    except Exception as e:
+        print("An error occurred while sending outputs:", str(e))
+    finally:
+        # Close the socket
+        client_socket.close()
+
+def handle_sensor_data(sensor_data, sensor_outputs):
     for sensor, state in sensor_data.items():
-        if state == 'true':
-            print(sensor, "triggered")
+        if state == 'true' and sensor in sensor_outputs:
+            outputs = sensor_outputs[sensor]
+            send_outputs(outputs)
+        elif state == "inactive":
+            print(sensor, "is inactive")
 
-def start_server(port):
+def start_server(port, xml_file):
+    sensor_outputs = read_sensor_outputs(xml_file)
+
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', port))
     server_socket.listen(1)  # Listen for incoming connections
@@ -31,9 +66,9 @@ def start_server(port):
                 sensor_data[sensor] = state
 
             # Handle the sensor data
-            handle_sensor_data(sensor_data)
+            handle_sensor_data(sensor_data, sensor_outputs)
 
         client_socket.close()
 
 if __name__ == "__main__":
-    start_server(12345)  # Start the server on port 12345
+    start_server(12345, 'data.xml')  # Start the server on port 12345, reading triggers from 'sensor_triggers.xml'
