@@ -2,7 +2,7 @@ import socket
 import time
 import random
 
-def generate_sensor_states(num_sensors=5):
+def generate_sensor_states(num_sensors = 5):
     sensor_states = {}
     for i in range(num_sensors):
         sensor_states[f"sensor_{i+1}"] = random.choice(['active', 'inactive', 'true'])
@@ -16,11 +16,9 @@ def send_sensor_states(sensor_states):
     try:
         client_socket.connect(server_address)
 
-        # Construct the message string
-        message = ",".join([f"{sensor}-{state}" for sensor, state in sensor_states.items()])
-
-        # Send the message
-        client_socket.sendall(message.encode())
+        for sensor, state in sensor_states.items():
+            data = f"{sensor}:{state}"
+            client_socket.sendall(data.encode())
 
         client_socket.close()
         print("Sensor states sent successfully:", sensor_states)
