@@ -50,7 +50,7 @@ class SensorServer:
 
     def send_outputs(self, outputs):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ('192.168.179.59', 12346)
+        server_address = ('127.0.0.1', 12346)
         try:
             client_socket.connect(server_address)
             client_socket.sendall(','.join(outputs).encode())
@@ -62,7 +62,7 @@ class SensorServer:
 
     def start_output_listener(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind(('0.0.0.0', 12347))
+        server_socket.bind(('127.0.0.1', 12347))
         server_socket.listen(1)  # Listen for incoming connections
 
         print("Output listener listening on 127.0.0.1:12347")

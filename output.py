@@ -1,12 +1,24 @@
 import socket
 import threading
+import time
 
 # Sample array of outputs
-outputs = ["output_1", "output_2", "output_3", "output_4", "output_5", "output_6", "output_7", "output_8", "output_9"]
+outputs = {
+    "output_1": 100,
+    "output_2": 100,
+    "output_3": 100,
+    "output_4": 100,
+    "output_5": 100,
+    "output_6": 100,
+    "output_7": 100,
+    "output_8": 100,
+    "output_9": 100
+}
 
 def send_output(output_index, ip_address, port):
-    if output_index < len(outputs):
-        output = outputs[output_index]
+    output_name = f"output_{output_index + 1}"
+    if output_name in outputs:
+        output = f"{output_name}:{outputs[output_name]}%"
         # Create a client socket
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -52,6 +64,14 @@ def start_output_listener(ip_address, port):
 
         client_socket.close()
 
+def degrade_outputs():
+    while True:
+        for output in outputs:
+            outputs[output] -= 2  # Degrade by 2% every second
+            if outputs[output] < 40:
+                print(f"Warning: Output {output} health is below 40%!")
+            time.sleep(1)
+
 def send_output_continuously(ip_address, port):
     while True:
         index = int(input("Enter the index of the output you want to send (0-8): "))
@@ -62,9 +82,13 @@ if __name__ == "__main__":
     server_ip_address = '127.0.0.1'
     server_port = 12347
 
-    # Create a thread for continuous output sending
+    # Create threads for continuous output sending and output degradation
     send_thread = threading.Thread(target=send_output_continuously, args=(server_ip_address, server_port))
+    degrade_thread = threading.Thread(target=degrade_outputs)
+
+    # Start the threads
     send_thread.start()
+    degrade_thread.start()
 
     # Start the output listener on a separate thread
     start_output_listener('127.0.0.1', 12346)
