@@ -8,10 +8,10 @@ def generate_sensor_states(num_sensors=5):
         sensor_states[f"sensor_{i+1}"] = random.choice(['active', 'inactive', 'true'])
     return sensor_states
 
-def send_sensor_states(sensor_states):
+def send_sensor_states(sensor_states, port=12345, alternative_port=13345):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_address = ('localhost', 12345)
+    server_address = ('localhost', port)
 
     try:
         client_socket.connect(server_address)
@@ -23,9 +23,12 @@ def send_sensor_states(sensor_states):
         client_socket.sendall(message.encode())
 
         client_socket.close()
-        print("Sensor states sent successfully:", sensor_states)
+        print("Sensor states sent successfully to port:", port)
     except Exception as e:
-        print("An error occurred while sending sensor states:", str(e))
+        print(f"An error occurred while sending sensor states to port {port}: {str(e)}")
+        # If error occurs, try connecting to alternative port
+        if port != alternative_port:
+            send_sensor_states(sensor_states, alternative_port)
 
 if __name__ == "__main__":
     while True:
