@@ -8,7 +8,7 @@ class SensorServer:
         self.xml_file = xml_file
         self.sensor_outputs = self.read_sensor_outputs(xml_file)
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('localhost', port))
+        self.server_socket.bind(('0.0.0.0', port))
         self.server_socket.listen(1)  # Listen for incoming connections
         self.output_data = {}  # Store received output data
 
@@ -23,16 +23,21 @@ class SensorServer:
         return sensor_outputs
 
     def handle_client(self, client_socket):
-        data = client_socket.recv(1024).decode()
-        if data:
-            sensor_data = {}
-            sensor_states = data.split(",")
-            for state in sensor_states:
-                sensor, state = state.split("-")
-                sensor_data[sensor] = state
-            self.handle_sensor_data(sensor_data)
+        try:
+            data = client_socket.recv(1024).decode()
+            if data:
+                sensor_data = {}
+                sensor_states = data.split(",")
+                for state in sensor_states:
+                    sensor, state = state.split("-")
+                    sensor_data[sensor] = state
+                self.handle_sensor_data(sensor_data)
 
-        client_socket.close()
+        except Exception as e:
+            print("Error handling client:", str(e))
+
+        finally:
+            client_socket.close()
 
     def handle_sensor_data(self, sensor_data):
         for sensor, state in sensor_data.items():
@@ -56,24 +61,29 @@ class SensorServer:
 
 
     def start_output_listener(self):
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind(('0.0.0.0', 12347))
-        server_socket.listen(1)  # Listen for incoming connections
+        try:
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.bind(('0.0.0.0', 12347))
+            server_socket.listen(1)  # Listen for incoming connections
 
-        print("Output listener listening on 0.0.0.0:12347")
+            print("Output listener listening on 0.0.0.0:12347")
 
-        while True:
-            client_socket, client_address = server_socket.accept()
-            print("Connection from:", client_address)
+            while True:
+                client_socket, client_address = server_socket.accept()
+                print("Connection from:", client_address)
 
-            # Receive data from the client
-            data = client_socket.recv(1024).decode()
+                # Receive data from the client
+                data = client_socket.recv(1024).decode()
 
-            if data:
-                # Handle the output data
-                self.handle_output_data(data)
+                if data:
+                    # Handle the output data
+                    self.handle_output_data(data)
 
-            client_socket.close()
+                client_socket.close()
+        except Exception as e:
+            print("Output Failure:", str(e))
+        finally:
+            server_socket.close()
 
     def handle_output_data(self, output_data):
         output_name = output_data.strip()
@@ -91,6 +101,8 @@ class SensorServer:
                 client_thread.start()
             except Exception as e:
                 print("Input Failure: No connection to sensor")
+            finally:
+                client_socket.close()
 
 if __name__ == "__main__":
     sensor_server = SensorServer(12345, 'data.xml')
