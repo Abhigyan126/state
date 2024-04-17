@@ -71,6 +71,9 @@ def start_output_listener(ip_address, port):
             client_socket.close()
 
 def degrade_outputs(server_ip_address, server_port):
+    # Delay thread start by 20 seconds
+    time.sleep(50)
+    
     while True:
         with outputs_lock:
             for output_name, percentage in outputs.items():
@@ -104,6 +107,9 @@ def send_warning(ip_address, port, message):
             client_socket.close()
 
 def send_output_continuously(ip_address, port):
+    # Delay thread start by 20 seconds
+    time.sleep(20)
+    
     while True:
         try:
             # Generate a random output key and value

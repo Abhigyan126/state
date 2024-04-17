@@ -1,6 +1,7 @@
 import socket
 import xml.etree.ElementTree as ET
 import threading
+import time
 
 class SensorServer:
     def __init__(self, port, xml_file):
@@ -46,6 +47,9 @@ class SensorServer:
                 self.send_outputs(outputs)
             elif state == "inactive":
                 print("Input failure:", sensor)
+                if sensor in self.sensor_outputs:
+                    outputs = self.sensor_outputs[sensor]
+                    print(f"Transaction/state that would have been triggered: {', '.join(outputs)}")
 
     def send_outputs(self, outputs):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -91,6 +95,9 @@ class SensorServer:
         print("Error occurred at:", output_name)
 
     def start(self):
+        # Delay start by 20 seconds
+        time.sleep(50)
+        
         output_listener_thread = threading.Thread(target=self.start_output_listener)
         output_listener_thread.start()
 

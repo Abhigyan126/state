@@ -31,6 +31,9 @@ def send_sensor_states(sensor_states, port=12345, alternative_port=13345):
             send_sensor_states(sensor_states, alternative_port)
 
 if __name__ == "__main__":
+    # Delay the execution by 20 seconds
+    time.sleep(50)
+
     while True:
         sensor_states = generate_sensor_states()
         send_sensor_states(sensor_states)
